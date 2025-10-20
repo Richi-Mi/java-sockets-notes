@@ -16,7 +16,7 @@ public class Client {
     private static final int LENGTH         = 65535;
     private static final int PORT           = 8080;
     private static final String HOST        = "127.0.0.1";
-    private static final int TAM            = 60000; // Bytes a enviar p/datagrama.
+    private static final int TAM            = 30000; // Bytes a enviar p/datagrama.
 
     public static void playMp3FromBytes(byte[] mp3ByteArray) {
 

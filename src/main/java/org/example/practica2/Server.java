@@ -17,7 +17,7 @@ public class Server {
     private static final int PORT           = 8080;
     private static final String DIR_SONGS   = "/Users/josericardomendoza/IdeaProjects/Sockets/src/main/java/org/example/practica2/assets/";
     private static final String HOST        = "127.0.0.1";
-    private static final int TAM            = 60000; // Bytes a enviar p/datagrama.
+    private static final int TAM            = 30000; // Bytes a enviar p/datagrama.
 
 
 
@@ -41,7 +41,6 @@ public class Server {
         System.out.println("Songs loaded: " + songs.size());
 
         try {
-            InetAddress address = InetAddress.getByName(HOST);
             DatagramSocket ds = new DatagramSocket(PORT);
             ds.setReuseAddress(true);
 
@@ -81,11 +80,13 @@ public class Server {
 
                     int init_index = 0;
                     int end_index  = 0;
+                    int x = 0;
 
                     for( int j = 0; j < tp; j++ ) {
                         // Inidices de inicio a fin.
                         init_index = j * TAM;
                         end_index  = (j * TAM) + TAM;
+                        x++;
 
                         // Mandamos un paquete de datos de 60 KB
                         byte[] tmp = Arrays.copyOfRange(data, init_index, end_index);
@@ -96,12 +97,10 @@ public class Server {
                         ds.receive(packet);
 
                         int eco_index = Integer.parseInt(new String(packet.getData(), 0, packet.getLength()));
-                        // TODO: Check this validation (The three validations) ....
-                        if( j != eco_index ) {
+                        if( x != eco_index ) {
                             // Retroceder_n
                             j = eco_index;
                         }
-                        // ....
                         System.out.println("Paquete x = " + eco_index + " recibido");
 
                     }
