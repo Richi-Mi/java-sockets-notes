@@ -2,27 +2,22 @@ package org.example.practica2;
 
 import org.example.practica2.model.Song;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Server {
 
-    private static final int LENGTH         = 65535;
-    private static final int PORT           = 8080;
-    private static final String DIR_SONGS   = "/Users/josericardomendoza/IdeaProjects/Sockets/src/main/java/org/example/practica2/assets/";
-    private static final String HOST        = "127.0.0.1";
-    private static final int TAM            = 30000; // Bytes a enviar p/datagrama.
-
-
-
+    private static final int LENGTH = 65535;
+    private static final int PORT = 8080;
+    private static final String DIR_SONGS = "src/main/java/org/example/practica2/assets/";
+    
     private static List<Song> getMySongs() {
-
         List<Song> songs = new ArrayList<>();
         File fs2 = new File(DIR_SONGS.concat("mono_no_aware.mpeg"));
         File fs3 = new File(DIR_SONGS.concat("no_capea.mpeg"));
@@ -33,97 +28,55 @@ public class Server {
         songs.add(new Song("No Capea", "Xavi", fs3));
 
         return songs;
-
     }
 
     public static void main(String[] args) {
         List<Song> songs = getMySongs();
         System.out.println("Songs loaded: " + songs.size());
 
-        try {
-            DatagramSocket ds = new DatagramSocket(PORT);
+        try (DatagramSocket ds = new DatagramSocket(PORT)) { // Socket principal en 8080
             ds.setReuseAddress(true);
-
-            System.out.println("Server started on port: " + PORT);
+            System.out.println("Server started on port: " + PORT + " (Concurrente)");
 
             do {
-                // Primero el cliente nos manda un numero para saber el numero de la canción a reproducir.
+                // 1. Servidor principal solo espera el *índice* de la canción
                 byte[] buf = new byte[LENGTH];
                 DatagramPacket packet = new DatagramPacket(buf, LENGTH);
-                ds.receive(packet);
+                ds.receive(packet); // Espera petición en puerto 8080
 
-                int index = Integer.parseInt(new String(packet.getData(), 0, packet.getLength()));
-                // Si se recibe 1 indice invalido, entonces rompe el bucle.
-                if(index < 0 || index >= songs.size()) {
-                    System.out.println("Goodbye");
-                    break;
+                // 2. Extraemos el índice y la info del cliente
+                int index;
+                try {
+                    
+                    index = Integer.parseInt(new String(packet.getData(), 0, packet.getLength()));
+                } catch (NumberFormatException e) {
+                    System.err.println("Error: Paquete recibido no es un índice numérico. Ignorando.");
+                    continue; // Vuelve al inicio del bucle a esperar otro cliente
+                }
+                
+                if (index < 0 || index >= songs.size()) {
+                    System.out.println("Índice inválido " + index + ". Ignorando.");
+                    continue; // Vuelve al inicio del bucle
                 }
 
-                // Mandar ECO del paquete.
-                System.out.println("Se ha recibido el indice " + index + " reproduciendo: " + songs.get(index).getName());
-                ds.send(packet);
+                System.out.println("Petición recibida para: " + songs.get(index).getName());
 
-                // Mandar bytes de la canción.
-                FileInputStream fis     = new FileInputStream(songs.get(index).getFile());
-                BufferedInputStream bis = new BufferedInputStream(fis);
+                // 3. Extraemos los datos del cliente del paquete inicial
+                InetAddress clientAddress = packet.getAddress();
+                int clientPort = packet.getPort();
+                Song songToPlay = songs.get(index);
 
-                // Leemos todos los bytes
-                byte[] data = bis.readAllBytes();
-                System.out.println("Longitud de la canción: " + data.length);
+                // 4. Enviamos el ECO de confirmación del índice
+                
+                ds.send(packet); 
 
-                // Mandamos la canción por partes.
-                if( data.length > TAM ) {
-                    byte[] buffer_eco = new byte[data.length];
-                    // Número de peticiones a enviar para terminar el archivo.
-                    int tp = (data.length / TAM);
+                // 5. Creamos el Handler y lo iniciamos en un Hilo nuevo
+                ClientHandler handler = new ClientHandler(songToPlay, clientAddress, clientPort);
+                new Thread(handler).start(); // Iniciamos el hilo.
 
-
-                    int init_index = 0;
-                    int end_index  = 0;
-                    int x = 0;
-
-                    for( int j = 0; j < tp; j++ ) {
-                        // Inidices de inicio a fin.
-                        init_index = j * TAM;
-                        end_index  = (j * TAM) + TAM;
-                        x++;
-
-                        // Mandamos un paquete de datos de 60 KB
-                        byte[] tmp = Arrays.copyOfRange(data, init_index, end_index);
-                        packet.setData(tmp);
-                        ds.send(packet);
-
-                        // Recibimos el eco desde el cliente.
-                        ds.receive(packet);
-
-                        int eco_index = Integer.parseInt(new String(packet.getData(), 0, packet.getLength()));
-                        if( x != eco_index ) {
-                            // Retroceder_n
-                            j = eco_index;
-                        }
-                        System.out.println("Paquete x = " + eco_index + " recibido");
-
-                    }
-                    if(buffer_eco.length % TAM > 0) {
-                        int sobrantes = data.length % TAM;
-                        // Mandamos el ultimo pedazo de bits restantes.
-                        byte[] tmp = Arrays.copyOfRange(buffer_eco, tp * TAM, ((tp * TAM) + sobrantes));
-                        packet.setData(tmp);
-                        ds.send(packet);
-
-                        // Recibimos el ultimo ECO de bits.
-                        ds.receive(packet);
-
-                        int eco_index = Integer.parseInt(new String(packet.getData(), 0, packet.getLength()));
-                        System.out.println("Paquete x = " + eco_index + " recibido");
-                    }
-                    System.out.println("ECO de los paquetes recibido. ");
-                    byte[] exit = "salir".getBytes();
-                    packet.setData(exit);
-                    ds.send(packet);
-                }
-                fis.close();
-                bis.close();
+                // 6. El servidor NO espera. Vuelve al 'do-while' para recibir(packet)
+                // de un *nuevo* cliente en el puerto 8080.
+                
             } while (true);
         } catch (SocketException e) {
             System.out.println("Error al crear el Socket UDP");
