@@ -1,4 +1,3 @@
-// Contenido para: Server.java (Modificado)
 package org.example.practica2;
 
 import org.example.practica2.model.Song;
@@ -16,10 +15,8 @@ public class Server {
 
     private static final int LENGTH = 65535;
     private static final int PORT = 8080;
-    // ¡Asegúrate de que esta ruta esté bien para TU máquina!
     private static final String DIR_SONGS = "src/main/java/org/example/practica2/assets/";
     
-    // (Este método de cargar canciones no cambia)
     private static List<Song> getMySongs() {
         List<Song> songs = new ArrayList<>();
         File fs2 = new File(DIR_SONGS.concat("mono_no_aware.mpeg"));
@@ -50,7 +47,7 @@ public class Server {
                 // 2. Extraemos el índice y la info del cliente
                 int index;
                 try {
-                    // (Aquí está el manejo de errores que implementaste)
+                    
                     index = Integer.parseInt(new String(packet.getData(), 0, packet.getLength()));
                 } catch (NumberFormatException e) {
                     System.err.println("Error: Paquete recibido no es un índice numérico. Ignorando.");
@@ -69,12 +66,11 @@ public class Server {
                 int clientPort = packet.getPort();
                 Song songToPlay = songs.get(index);
 
-                // 4. (IMPORTANTE) Enviamos el ECO de confirmación del índice
-                // El cliente está esperando esto ANTES de empezar a recibir la canción.
-                // Lo enviamos desde el socket principal (8080).
+                // 4. Enviamos el ECO de confirmación del índice
+                
                 ds.send(packet); 
 
-                // 5. ¡La Magia! Creamos el Handler y lo iniciamos en un Hilo nuevo
+                // 5. Creamos el Handler y lo iniciamos en un Hilo nuevo
                 ClientHandler handler = new ClientHandler(songToPlay, clientAddress, clientPort);
                 new Thread(handler).start(); // Iniciamos el hilo.
 

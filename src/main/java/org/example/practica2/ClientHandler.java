@@ -1,4 +1,3 @@
-// Contenido para: ClientHandler.java
 package org.example.practica2;
 
 import org.example.practica2.model.Song;
@@ -29,7 +28,7 @@ public class ClientHandler implements Runnable {
 
     @Override
     public void run() {
-        // 2. Este hilo crea su PROPIO socket en un puerto aleatorio (efímero)
+        // 2. Este hilo crea su PROPIO socket en un puerto aleatorio 
         // El cliente responderá automáticamente a este puerto.
         try (
             DatagramSocket threadSocket = new DatagramSocket();
@@ -39,8 +38,8 @@ public class ClientHandler implements Runnable {
             this.socket = threadSocket;
             System.out.println("[Handler " + socket.getLocalPort() + "] Hilo iniciado para: " + song.getName() + " -> " + clientAddress.getHostAddress() + ":" + clientPort);
 
-            // 3. --- INICIA LÓGICA COPIADA DE SERVER.JAVA ---
-            // (Esta es la misma lógica de partición que ya tenías)
+            // 3. --- INICIA LÓGICA QUE TENIAMOS DE SERVER.JAVA ---
+            
 
             byte[] data = bis.readAllBytes();
             System.out.println("[Handler " + socket.getLocalPort() + "] Longitud de la canción: " + data.length);
@@ -76,7 +75,7 @@ public class ClientHandler implements Runnable {
                     // System.out.println("[Handler " + socket.getLocalPort() + "] Paquete x = " + eco_index + " recibido");
                 }
                 
-                // 5. --- INICIA LÓGICA CORREGIDA DE SOBRANTES ---
+                // 5. --- INICIA LÓGICA DE SOBRANTES ---
                 if (data.length % TAM > 0) {
                     int sobrantes = data.length % TAM;
                     int inicio_sobrantes = tp * TAM;
@@ -99,7 +98,7 @@ public class ClientHandler implements Runnable {
                 DatagramPacket packet = new DatagramPacket(exit, exit.length, clientAddress, clientPort);
                 socket.send(packet);
             }
-            // 6. --- FIN LÓGICA COPIADA ---
+            // 6. --- FIN LÓGICA DE SERVER.JAVA ---
 
         } catch (IOException e) {
             System.err.println("[Handler] Error en el hilo: " + e.getMessage());
