@@ -56,7 +56,22 @@ public class Client {
             System.out.println(" 1. Mono no Aware");
             System.out.println(" 2. No Capea ");
 
-            int index = scan.nextInt();
+           
+            int index = -1;
+
+            try {
+                System.out.println("Elige una canción (0, 1, o 2):");
+                index = scan.nextInt();
+
+                if (index < 0 || index >= 3) {
+                    System.out.println("Índice no válido. Proceso cancelado.");
+                    System.exit(0);
+                }
+
+            } catch (java.util.InputMismatchException e) {
+                System.out.println("Error: Debes ingresar un número. Proceso cancelado.");
+                System.exit(0); // Cierra el cliente si la entrada es inválida
+            }
 
             byte[] data = Integer.toString(index).getBytes();
             DatagramPacket packet = new DatagramPacket(data, data.length, address, PORT);
