@@ -35,7 +35,13 @@ public class Chat {
         for(User user : userList)
             jsonArray.add(user.toJSON());
 
+        JSONArray messages = new JSONArray();
+        for(Message msg : messageList)
+            messages.add(msg.toJSON());
+
         jsonObject.put("users", jsonArray);
+        jsonObject.put("messages", messages);
+
         return jsonObject;
     }
     @Override

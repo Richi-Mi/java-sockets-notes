@@ -46,25 +46,30 @@ public class Manager extends Thread {
         DatagramPacket eco_packet = new DatagramPacket(receiveBuffer, receiveBuffer.length, address);
         String[] request = new String(receiveBuffer).split(",");
 
+        // Ingresar al sistema.
         if(request[0].equals("ENTER")) {
             dataSource.addUser(request[1], address);
             eco_packet.setData("success".getBytes());
         }
+        // Crear un nuevo chat
         else if(request[0].equals("CREATE")) {
             dataSource.addChat(request[1], dataSource.getUserByName(request[2]));
             eco_packet.setData("success".getBytes());
         }
+        // Obtener los chats disponibles.
         else if(request[0].equals("GET")) {
             JSONArray jsonArray = dataSource.getJsonChats();
             byte[] data = jsonArray.toJSONString().getBytes();
             eco_packet.setData(data);
         }
+        // TODO: PROVE THIS.
         else if(request[0].equals("SENDMESSAGE")) {
 
             User user       = dataSource.getUserByName(request[1]);
             int chatId      = Integer.parseInt(request[2]);
             String message  = request[3];
 
+            System.out.println("Mensaje recibido " + message + " de " + user.name());
             dataSource.addMessageToChat(chatId, new Message(message, user.name()));
 
             // Manda el mensaje a todos los usuarios activos en el chat.
@@ -80,7 +85,7 @@ public class Manager extends Thread {
                     throw new RuntimeException(e);
                 }
             }
-            eco_packet.setData("success".getBytes());
+            return;
         }
         else if(request[0].equals("GETCHAT")) {
             int chatId      = Integer.parseInt(request[1]);
