@@ -41,8 +41,8 @@ public class AppDataSource {
     }
 
     public void addChat(String name, User from) {
-        Chat chat = new Chat(name);
-        chat.addUserToChat(from);
+        Chat chat = new Chat(name, from.name());
+        // chat.addUserToChat(from);
         chatList.add(chat);
     }
 
@@ -50,7 +50,9 @@ public class AppDataSource {
         return this.chatList;
     }
     public Chat getChatByIndex(int index) {
-        return chatList.get(index);
+        Chat chat = chatList.get(index);
+
+        return chat;
     }
     public JSONArray getJsonChats() {
         JSONArray jsonArray = new JSONArray();
