@@ -100,14 +100,13 @@ public class ReceiveManager extends Thread {
                     chat.addUserToChat(user);
                     eco_packet.setData(chat.toJson().toString().getBytes());
                 } else if (request[0].equals("LEAVECHAT")) {
-                    // LEAVECHAT,SENDERID,CHATID
+                    // LEAVECHAT,SENDERID
                     User user = dataSource.getUserByName(request[1]);
-                    Chat chat = dataSource.getChatByIndex(Integer.parseInt(request[2]));
 
-                    chat.removeUserFromChat(user);
+                    dataSource.removeUser(user);
                     eco_packet.setData("success".getBytes());
 
-                    System.out.println("Usuario sacado del chat");
+                    System.out.println("Usuario: " + user.name() + "sacado del chat");
                 }
 
                 // Mandamos eco de la petición.

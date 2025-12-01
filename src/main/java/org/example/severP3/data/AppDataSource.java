@@ -17,6 +17,9 @@ public class AppDataSource {
         this.usuarios = new ArrayList<>();
         this.chatList = new ArrayList<>();
     }
+    public void removeUser(User name) {
+        usuarios.remove(name);
+    }
     public void addUser(String name, SocketAddress address) {
         User newUser = null;
 
