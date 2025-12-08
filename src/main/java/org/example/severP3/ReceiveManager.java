@@ -39,6 +39,8 @@ public class ReceiveManager extends Thread {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 serverSocket.receive(packet);
 
+                System.out.println("Recibi la data");
+
                 this.address = packet.getSocketAddress();
 
                 // Parse the request.
@@ -69,7 +71,6 @@ public class ReceiveManager extends Thread {
                     byte[] data = jsonArray.toJSONString().getBytes();
                     eco_packet.setData(data);
                 }
-                // TODO: PROVE THIS.
                 else if (request[0].equals("SENDMESSAGE")) {
 
                     User user = dataSource.getUserByName(request[1]);

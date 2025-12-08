@@ -11,7 +11,7 @@ import java.util.Enumeration;
 
 public class ServerChat {
 
-    private static final int PORT = 8080;
+    private static final int PORT = 8085;
     private static final int PACKET_LENGTH = 65535;
 
     private static MulticastSocket serverSocket;
