@@ -16,11 +16,24 @@ public class ServerManager extends Thread {
 
     private static final String DIR_FILES = "src/main/java/org/example/practica4/assets/";
 
+    private final boolean isSecondary;
+
     private final Socket client;
     private final Scanner in;
 
     public ServerManager(Socket client) {
         this.client = client;
+        this.isSecondary = false;
+        try {
+            this.in  = new Scanner(client.getInputStream());
+        } catch (IOException e) {
+            System.out.println("Error creating output/input stream");
+            throw new RuntimeException(e);
+        }
+    }
+    public ServerManager(Socket client, boolean isSecondary) {
+        this.client = client;
+        this.isSecondary = isSecondary;
         try {
             this.in  = new Scanner(client.getInputStream());
         } catch (IOException e) {
@@ -39,7 +52,14 @@ public class ServerManager extends Thread {
 
             if (in.hasNextLine()) {
                 String requestLine = in.nextLine();
-                System.out.println("Request Header: " + requestLine);
+                if(!isSecondary) {
+                    Thread.sleep(10000);
+                    System.out.println("Request Header: " + requestLine);
+                }
+                else {
+                    System.out.println("Request Header on second server: " + requestLine);
+                }
+
 
 
                 // get the content-length (For POST and DELETE)
@@ -162,6 +182,10 @@ public class ServerManager extends Thread {
             System.err.println("Error manejando el cliente: " + e.getMessage());
         } finally {
             try {
+                if (!isSecondary) {
+                    // Decrement counter
+                    ServerHttp.decrementConnections();
+                }
                 if (client != null) {
                     client.getOutputStream().write(responseBytes);
                     client.getOutputStream().flush();
