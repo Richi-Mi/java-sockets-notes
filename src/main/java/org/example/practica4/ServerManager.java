@@ -53,7 +53,8 @@ public class ServerManager extends Thread {
             if (in.hasNextLine()) {
                 String requestLine = in.nextLine();
                 if(!isSecondary) {
-                    Thread.sleep(10000);
+                    // TEST FOR two servers
+                    // Thread.sleep(10000);
                     System.out.println("Request Header: " + requestLine);
                 }
                 else {
